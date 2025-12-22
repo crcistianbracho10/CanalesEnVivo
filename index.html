@@ -1,96 +1,94 @@
+
 <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Canales de TV en Vivo</title>
-    <!-- Tailwind CSS para un estilo moderno y adaptable -->
     <link rel="icon" href="https://i.postimg.cc/Z5shmNy0/Sin-t-tulo-15.png" type="image/png">
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
     <style>
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: #f3f4f6;
-            color: #1f2937;
+        /* MODO OSCURO */
+        body.dark-mode { background-color: #111827 !important; color: #f9fafb !important; }
+        body.dark-mode .channel-card { background-color: #1f2937 !important; border-color: #374151 !important; }
+        body.dark-mode h1 { color: #ffffff !important; }
+        body.dark-mode .bg-white { background-color: #1f2937 !important; }
+        body.dark-mode input { color: #ffffff !important; background-color: #374151 !important; border-color: #4b5563 !important; }
+
+        body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; color: #1f2937; transition: background 0.3s; }
+        
+        /* Estilos del Reproductor */
+        .player-container { 
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+            background-color: rgba(0, 0, 0, 0.9); z-index: 1000; justify-content: center; align-items: center; 
         }
-        .channel-card {
-            transition: transform 0.2s, box-shadow 0.2s;
+        .video-wrapper { width: 90%; height: 80%; max-width: 1280px; max-height: 720px; position: relative; }
+        .close-button { 
+            position: absolute; top: -45px; right: 0; color: white; font-size: 35px; 
+            font-weight: bold; cursor: pointer; z-index: 1001; 
         }
-        .channel-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
-        }
-        .player-container {
-            display: none; /* Oculto por defecto */
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.9);
-            z-index: 1000;
-            justify-content: center;
-            align-items: center;
-            flex-direction: column;
-        }
-        .video-wrapper {
-            width: 90%;
-            height: 80%;
-            max-width: 1280px;
-            max-height: 720px;
-            position: relative;
-        }
-        .close-button {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            background-color: #fff;
-            color: #000;
-            font-weight: bold;
-            padding: 8px 12px;
-            border-radius: 50%;
-            cursor: pointer;
-            z-index: 1001;
-        }
+
+        /* Switch de palanca */
+        .switch { position: relative; display: inline-block; width: 44px; height: 22px; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 34px; }
+        .slider:before { position: absolute; content: ""; height: 16px; width: 16px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
+        input:checked + .slider { background-color: #2563eb; }
+        input:checked + .slider:before { transform: translateX(22px); }
+        
+        .no-scrollbar::-webkit-scrollbar { display: none; }
     </style>
 </head>
 <body class="p-8">
 
-    <!-- Contenedor del reproductor que se muestra dinámicamente -->
     <div id="player-modal" class="player-container">
         <div class="video-wrapper">
             <span id="close-player" class="close-button">&times;</span>
-            <iframe id="video-player"
-                    width="100%" 
-                    height="100%" 
-                    frameborder="0" 
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
-                    allowfullscreen>
-            </iframe>
+            <iframe id="video-player" width="100%" height="100%" frameborder="0" 
+                    allow="autoplay; encrypted-media; picture-in-picture" 
+                    allowfullscreen></iframe>
         </div>
     </div>
 
-    <!-- Encabezado con imagen y botón -->
-    <header class="flex justify-between items-center mb-10">
-        <!-- Contenedor para la imagen y el título -->
-        <div class="flex items-center space-x-4">
-            <!-- Imagen proporcionada por el usuario -->
-            <a href='https://postimages.org/' target='_blank'>
-                <img src='https://i.postimg.cc/Z5shmNy0/Sin-t-tulo-15.png' border='0' alt='Sin-t-tulo-15' class="w-12 h-12 rounded-lg" />
-            </a>
-            <h1 class="text-2xl font-bold text-gray-800">Canales de TV</h1>
+    <header class="mb-10">
+        <div class="flex justify-between items-center mb-6">
+            <div class="flex items-center space-x-4">
+                <img src='https://i.postimg.cc/Z5shmNy0/Sin-t-tulo-15.png' class="w-12 h-12 rounded-lg" />
+                <h1 class="text-2xl font-bold text-gray-800">Canales de TV</h1>
+            </div>
+            
+            <div class="flex items-center gap-4">
+                <div class="flex items-center gap-2">
+                    <span class="text-xs font-bold uppercase opacity-60">Tema</span>
+                    <label class="switch">
+                        <input type="checkbox" id="theme-toggle">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                <a href="https://docs.google.com/forms/d/e/1FAIpQLSdY4mYjwwYbIRwa0fxTj9Nt-i1cuIf3gfEA2ieT2lnaKvwBYw/viewform?usp=send_form" target="_blank" class="bg-blue-600 text-white px-6 py-2 rounded-lg font-bold shadow-md hover:bg-blue-700 transition">
+                    Añadir Canal
+                </a>
+            </div>
         </div>
-        
-        <!-- Botón para añadir canal, en la esquina opuesta -->
-        <a href="https://docs.google.com/forms/d/e/1FAIpQLSdY4mYjwwYbIRwa0fxTj9Nt-i1cuIf3gfEA2ieT2lnaKvwBYw/viewform?usp=send_form" 
-           target="_blank" 
-           class="bg-white text-blue-600 px-6 py-2 rounded-lg font-bold shadow-md hover:bg-blue-50 transition">
-            Añadir tu Canal
-        </a>
+
+        <div class="mb-6">
+            <input type="text" id="searchInput" placeholder="Buscar por nombre o tipo (ej: deportes, infantil, música...)" 
+                class="w-full px-5 py-3 rounded-xl border border-gray-300 shadow-sm outline-none text-gray-700 bg-white focus:ring-2 focus:ring-blue-500">
+        </div>
+
+        <div class="flex gap-2 overflow-x-auto pb-2 no-scrollbar">
+            <button onclick="filtrar('todos')" class="cat-btn bg-blue-600 text-white px-4 py-1.5 rounded-full text-sm font-medium transition shadow-md">Todos</button>
+            <button onclick="filtrar('deportes')" class="cat-btn bg-gray-300 text-gray-700 px-4 py-1.5 rounded-full text-sm font-medium transition">Deportes</button>
+            <button onclick="filtrar('infantil')" class="cat-btn bg-gray-300 text-gray-700 px-4 py-1.5 rounded-full text-sm font-medium transition">Infantil</button>
+            <button onclick="filtrar('regional')" class="cat-btn bg-gray-300 text-gray-700 px-4 py-1.5 rounded-full text-sm font-medium transition">Regional</button>
+            <button onclick="filtrar('internacional')" class="cat-btn bg-gray-300 text-gray-700 px-4 py-1.5 rounded-full text-sm font-medium transition">Internacional</button>
+            <button onclick="filtrar('musica')" class="cat-btn bg-gray-300 text-gray-700 px-4 py-1.5 rounded-full text-sm font-medium transition">Música</button>
+        </div>
     </header>
+
 
     <!-- Título de la sección de canales -->
     <div class="mb-6">
@@ -105,7 +103,7 @@
         <!-- Tarjeta del Canal 1 -->
         <a href="#" class="channel-card flex flex-col items-center bg-white p-4 rounded-lg shadow-md hover:shadow-lg transition"
            data-stream-url="https://embed.ksdjugfsddeports.com/embed/cartoonnetwork.html">
-            <img src="data:image/webp;base64,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" alt="Logo del Canal" class="w-24 h-24 mb-2 object-contain">
+            <img src="https://images.seeklogo.com/logo-png/2/1/cartoon-network-logo-png_seeklogo-26677.png" alt="Logo del Canal" class="w-24 h-24 mb-2 object-contain">
             <span class="text-sm font-semibold text-gray-700">Cartoon Network</span>
             <span class="text-xs text-green-500 font-bold mt-1">EN VIVO</span>
         </a>
@@ -722,7 +720,7 @@
    target="_blank"
    class="channel-card flex flex-col items-center bg-white p-4 rounded-lg shadow-md hover:shadow-lg transition duration-300 ease-in-out">
   
-  <img src="https://static.wikia.nocookie.net/doblaje/images/c/c0/Televen_%282024%29.svg/revision/latest/scale-to-width-down/300?cb=20241231204243&path-prefix=es"
+  <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ9cJRnrNC_iMNIUBOX9SUjhcwKwYawpin3PQ&s"
        alt="Logo del Canal C"
        class="w-24 h-24 mb-2 object-contain">
   
@@ -838,44 +836,111 @@
 
     </div>
 
-    <script>
-  const playerModal = document.getElementById('player-modal');
-  const videoPlayer = document.getElementById('video-player');
-  const closeButton = document.getElementById('close-player');
-  const channelCards = document.querySelectorAll('.channel-card');
+<script>
+    const channelCards = document.querySelectorAll('.channel-card');
+    const searchInput = document.getElementById('searchInput');
+    const themeToggle = document.getElementById('theme-toggle');
+    const playerModal = document.getElementById('player-modal');
+    const videoPlayer = document.getElementById('video-player');
+    const closeButton = document.getElementById('close-player');
 
-  channelCards.forEach(card => {
-    card.addEventListener('click', (event) => {
-      event.preventDefault();
+    // FILTRO INTELIGENTE (Sin Noticias)
+    function filtrar(categoria) {
+        const botones = document.querySelectorAll('.cat-btn');
+        botones.forEach(btn => {
+            btn.classList.replace('bg-blue-600', 'bg-gray-300');
+            btn.classList.replace('text-white', 'text-gray-700');
+        });
+        event.currentTarget.classList.replace('bg-gray-300', 'bg-blue-600');
+        event.currentTarget.classList.replace('text-gray-700', 'text-white');
 
-      const streamUrl = card.getAttribute('data-stream-url');
-      const pageUrl = card.getAttribute('href');
+        channelCards.forEach(card => {
+            const nombre = card.innerText.toLowerCase();
+            
+            const esDeporte = nombre.includes('espn') || nombre.includes('fox') || nombre.includes('win') || nombre.includes('deportes') || nombre.includes('stadium') || nombre.includes('tyc');
+            const esInfantil = nombre.includes('cartoon') || nombre.includes('disney') || nombre.includes('nick') || nombre.includes('discovery kids') || nombre.includes('boing') || nombre.includes('toointon');
+            const esRegional = nombre.includes('tele') || nombre.includes('canal') || nombre.includes('caracol') || nombre.includes('rcn') || nombre.includes('antena');
+            const esMusica = nombre.includes('mtv') || nombre.includes('htv') || nombre.includes('musica') || nombre.includes('vh1');
+            const esInternacional = nombre.includes('tve') || nombre.includes('univision') || nombre.includes('telemundo') || nombre.includes('azteca') || nombre.includes('star') || nombre.includes('cnn') || nombre.includes('dw');
 
-      // Si tiene stream directo, abrir en el iframe
-      if (streamUrl && streamUrl.startsWith('http')) {
-        videoPlayer.src = streamUrl;
-        playerModal.style.display = 'flex';
-        return;
-      }
+            if (categoria === 'todos') {
+                card.style.display = 'flex';
+            } else if (categoria === 'deportes' && esDeporte) {
+                card.style.display = 'flex';
+            } else if (categoria === 'infantil' && esInfantil) {
+                card.style.display = 'flex';
+            } else if (categoria === 'regional' && esRegional) {
+                card.style.display = 'flex';
+            } else if (categoria === 'musica' && esMusica) {
+                card.style.display = 'flex';
+            } else if (categoria === 'internacional' && esInternacional) {
+                card.style.display = 'flex';
+            } else {
+                card.style.display = 'none';
+            }
+        });
+    }
 
-      // Si tiene página web, abrir en nueva pestaña
-      if (pageUrl && pageUrl.startsWith('http')) {
-        window.open(pageUrl, '_blank');
-        return;
-      }
+    // BUSCADOR
+    if(searchInput) {
+        searchInput.addEventListener('input', () => {
+            const query = searchInput.value.toLowerCase();
+            channelCards.forEach(card => {
+                const nombre = card.innerText.toLowerCase();
+                card.style.display = nombre.includes(query) ? 'flex' : 'none';
+            });
+        });
+    }
 
-      // Si no tiene ninguna URL válida
-      console.error('No se encontró una URL válida para este canal.');
-      alert('Este canal no tiene una fuente válida configurada.');
+    // REPRODUCTOR MEJORADO
+    channelCards.forEach(card => {
+        card.addEventListener('click', (event) => {
+            event.preventDefault();
+            const streamUrl = card.getAttribute('data-stream-url');
+            
+            if (streamUrl && streamUrl.trim() !== "" && streamUrl !== "null") {
+                // Forzar limpieza de URL y cargar
+                videoPlayer.src = ""; // Limpiar antes de cargar
+                setTimeout(() => {
+                    videoPlayer.src = streamUrl;
+                    playerModal.style.display = 'flex';
+                }, 100);
+            } else {
+                const pageUrl = card.getAttribute('href');
+                if (pageUrl && pageUrl.startsWith('http')) {
+                    window.open(pageUrl, '_blank');
+                } else {
+                    alert("Este canal no tiene una señal activa en este momento.");
+                }
+            }
+        });
     });
-  });
 
-  closeButton.addEventListener('click', () => {
-    playerModal.style.display = 'none';
-    videoPlayer.src = '';
-  });
+    if(closeButton) {
+        closeButton.addEventListener('click', () => {
+            playerModal.style.display = 'none';
+            videoPlayer.src = '';
+        });
+    }
+
+    if(themeToggle) {
+        themeToggle.addEventListener('change', () => {
+            document.body.classList.toggle('dark-mode');
+        });
+    }
 </script>
 
+<footer class="mt-20 py-8 border-t border-gray-300 dark:border-gray-700 text-center">
+        <div class="flex flex-col items-center gap-2">
+            <img src="https://i.postimg.cc/Z5shmNy0/Sin-t-tulo-15.png" class="w-8 h-8 opacity-50 grayscale hover:grayscale-0 transition" alt="Logo Footer">
+            <p class="text-gray-500 dark:text-gray-400 font-medium text-sm">
+                &copy; 2025 <span class="text-blue-600 font-bold">Cristian Hilos</span>. Todos los derechos reservados.
+            </p>
+            <p class="text-xs text-gray-400 dark:text-gray-500">
+                Diseñado para la mejor experiencia de TV en vivo.
+            </p>
+        </div>
+    </footer>
 
 </body>
 </html>
