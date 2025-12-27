@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reproductor Pro Pantalla Completa</title>
+    <link href="https://vjs.zencdn.net/8.10.0/video-js.css" rel="stylesheet" />
+    <link href="https://unpkg.com/@videojs/themes@1.0.1/dist/fantasy/index.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-bg: #000000;
+            --accent-color: #38bdf8;
+        }
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #000;
+            overflow: hidden;
+        }
+        /* Contenedor principal al 100% */
+        .container {
+            width: 100vw;
+            height: 100vh;
+        }
+        /* Video holder sin bordes ni redondeado */
+        .video-holder {
+            width: 100%;
+            height: 100%;
+            background: #000;
+            position: relative;
+            overflow: hidden;
+        }
+        /* Ajuste de VideoJS para llenar el contenedor */
+        .video-js {
+            width: 100% !important;
+            height: 100% !important;
+        }
+
+        /* Modos de escala */
+        .vjs-stretch video { object-fit: fill !important; }
+        .vjs-zoom video { transform: scale(1.5) !important; }
+
+        /* Barra de controles */
+        .vjs-control-bar {
+            display: flex !important;
+            background: rgba(15, 23, 42, 0.8) !important;
+            backdrop-filter: blur(10px);
+            height: 60px !important;
+            align-items: center !important;
+            padding: 0 20px !important;
+            z-index: 2;
+        }
+
+        .vjs-live-display, .vjs-live-control { display: none !important; }
+        
+        .vjs-volume-panel.vjs-volume-panel-vertical {
+            order: 2 !important;
+            display: flex !important;
+        }
+
+        .vjs-fantasy .vjs-play-progress, 
+        .vjs-fantasy .vjs-volume-level {
+            background-color: var(--accent-color) !important;
+        }
+
+        .vjs-setting-button {
+            cursor: pointer;
+            font-size: 1.5em !important;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            order: 10 !important;
+        }
+
+        /* Menú de configuración */
+        #config-menu {
+            display: none;
+            position: absolute;
+            bottom: 80px;
+            right: 20px;
+            background: rgba(15, 23, 42, 0.95);
+            border: 1px solid #334155;
+            border-radius: 12px;
+            padding: 15px;
+            z-index: 2147483647;
+            color: white;
+            min-width: 220px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.8);
+            backdrop-filter: blur(15px);
+        }
+
+        .menu-label {
+            font-size: 11px;
+            font-weight: bold;
+            color: var(--accent-color);
+            text-transform: uppercase;
+            margin: 10px 0 5px 0;
+            display: block;
+            letter-spacing: 1px;
+        }
+
+        .menu-item {
+            padding: 10px;
+            cursor: pointer;
+            font-size: 14px;
+            border-radius: 6px;
+            transition: all 0.2s;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .menu-item:hover {
+            background: rgba(56, 189, 248, 0.2);
+            color: var(--accent-color);
+        }
+
+        .vjs-play-control { order: 1 !important; }
+        .vjs-progress-control {
+            order: 3 !important;
+            flex: 1 1 auto !important;
+            display: flex !important;
+            align-items: center !important;
+        }
+        .vjs-fullscreen-toggle { order: 11 !important; }
+        .vjs-progress-holder { height: 6px !important; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="video-holder">
+            <video
+                id="my-video"
+                class="video-js vjs-theme-fantasy vjs-big-play-centered"
+                controls
+                preload="auto"
+                crossorigin="anonymous"
+            >
+                <source src="https://streamer1.nexgen.bz/HTV/index.m3u8" type="application/x-mpegURL">
+            </video>
+
+            <div id="config-menu">
+                <span class="menu-label" style="margin-top:0;">Funciones</span>
+                <div class="menu-item" onclick="togglePiP()">
+                    <span>Imagen en Imagen (PiP)</span>
+                    <small>P</small>
+                </div>
+                
+                <span class="menu-label">Amplificador de Voz</span>
+                <div class="menu-item" onclick="setGain(1)">Normal (100%)</div>
+                <div class="menu-item" onclick="setGain(2)">Amplificar (200%)</div>
+                <div class="menu-item" onclick="setGain(3)">Máximo (300%)</div>
+
+                <span class="menu-label">Escala de Imagen</span>
+                <div class="menu-item" onclick="setMode('normal')">Normal</div>
+                <div class="menu-item" onclick="setMode('stretch')">Estirar</div>
+                <div class="menu-item" onclick="setMode('zoom')">Zoom</div>
+                
+                <span class="menu-label">Velocidad</span>
+                <div class="menu-item" onclick="setSpeed(1)">Normal (1x)</div>
+                <div class="menu-item" onclick="setSpeed(1.5)">Rápido (1.5x)</div>
+                <div class="menu-item" onclick="setSpeed(2)">Súper (2x)</div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://vjs.zencdn.net/8.10.0/video.min.js"></script>
+    <script>
+        const player = videojs('my-video', {
+            autoplay: false,
+            responsive: true,
+            fluid: false, // Desactivamos fluid para manejar el 100% manual
+            liveui: true, 
+            controlBar: {
+                volumePanel: { inline: false, vertical: true },
+                children: [
+                    'playToggle',
+                    'volumePanel',
+                    'progressControl',
+                    'fullscreenToggle'
+                ]
+            }
+        });
+
+        // --- LÓGICA DE AUDIO (GAIN NODE) ---
+        let audioContext, source, gainNode;
+        function initAudio() {
+            if (!audioContext) {
+                const videoElement = document.querySelector('#my-video_html5_api');
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                source = audioContext.createMediaElementSource(videoElement);
+                gainNode = audioContext.createGain();
+                source.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+            }
+        }
+
+        function setGain(value) {
+            initAudio();
+            if (audioContext.state === 'suspended') audioContext.resume();
+            gainNode.gain.value = value;
+            closeMenu();
+        }
+
+        player.ready(function() {
+            const playerEl = player.el();
+            const menu = document.getElementById('config-menu');
+            playerEl.appendChild(menu); 
+
+            const cb = player.controlBar.el();
+            const configBtn = document.createElement('button');
+            configBtn.className = 'vjs-control vjs-button vjs-setting-button';
+            configBtn.innerHTML = `
+                <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor">
+                    <path d="M19.14,12.94c0.04-0.3,0.06-0.61,0.06-0.94c0-0.32-0.02-0.64-0.07-0.94l2.03-1.58c0.18-0.14,0.23-0.41,0.12-0.61 l-1.92-3.32c-0.12-0.22-0.37-0.29-0.59-0.22l-2.39,0.96c-0.5-0.38-1.03-0.7-1.62-0.94L14.4,2.81c-0.04-0.24-0.24-0.41-0.48-0.41 h-3.84c-0.24,0-0.43,0.17-0.47,0.41L9.25,5.35C8.66,5.59,8.12,5.92,7.63,6.29L5.24,5.33c-0.22-0.08-0.47,0-0.59,0.22L2.74,8.87 C2.62,9.08,2.66,9.34,2.86,9.48l2.03,1.58C4.84,11.36,4.81,11.69,4.81,12c0,0.31,0.02,0.65,0.07,0.94l-2.03,1.58 c-0.18,0.14-0.23,0.41-0.12,0.61l1.92,3.32c0.12,0.22,0.37,0.29,0.59,0.22l2.39-0.96c0.5,0.38,1.03,0.7,1.62,0.94l0.36,2.54 c0.05,0.24,0.24,0.41,0.48,0.41h3.84c0.24,0,0.44-0.17,0.47-0.41l0.36-2.54c0.59-0.24,1.13-0.56,1.62-0.94l2.39,0.96 c0.22,0.08,0.47,0,0.59-0.22l1.92-3.32c0.12-0.22,0.07-0.47-0.12-0.61L19.14,12.94z M12,15.6c-1.98,0-3.6-1.62-3.6-3.6 s1.62-3.6,3.6-3.6s3.6,1.62,3.6,3.6S13.98,15.6,12,15.6z"/>
+                </svg>`;
+            
+            cb.insertBefore(configBtn, cb.lastChild);
+
+            configBtn.onclick = function(e) {
+                e.stopPropagation();
+                menu.style.display = (menu.style.display === 'block') ? 'none' : 'block';
+            };
+        });
+
+        // --- TECLAS DE ACCESO RÁPIDO ---
+        window.addEventListener('keydown', (e) => {
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+            switch(e.key.toLowerCase()) {
+                case ' ':
+                case 'k':
+                    e.preventDefault();
+                    player.paused() ? player.play() : player.pause();
+                    break;
+                case 'f':
+                    if (player.isFullscreen()) { player.exitFullscreen(); } 
+                    else { player.requestFullscreen(); }
+                    break;
+                case 'm':
+                    player.muted(!player.muted());
+                    break;
+                case 'p':
+                    togglePiP();
+                    break;
+            }
+        });
+
+        async function togglePiP() {
+            const videoElement = document.querySelector('#my-video_html5_api');
+            try {
+                if (document.pictureInPictureElement) {
+                    await document.exitPictureInPicture();
+                } else {
+                    await videoElement.requestPictureInPicture();
+                }
+            } catch (e) { console.error(e); }
+            closeMenu();
+        }
+
+        function setMode(mode) {
+            const videoWrapper = player.el();
+            videoWrapper.classList.remove('vjs-stretch', 'vjs-zoom');
+            if(mode === 'stretch') videoWrapper.classList.add('vjs-stretch');
+            if(mode === 'zoom') videoWrapper.classList.add('vjs-zoom');
+            closeMenu();
+        }
+
+        function setSpeed(speed) {
+            player.playbackRate(speed);
+            closeMenu();
+        }
+
+        function closeMenu() {
+            document.getElementById('config-menu').style.display = 'none';
+        }
+
+        player.on('click', closeMenu);
+
+        // Reintento automático por error
+        player.on('error', () => {
+            setTimeout(() => {
+                player.src({ src: 'https://streamer1.nexgen.bz/HTV/index.m3u8', type: 'application/x-mpegURL' });
+                player.load();
+                player.play();
+            }, 5000);
+        });
+    </script>
+</body>
+</html>
